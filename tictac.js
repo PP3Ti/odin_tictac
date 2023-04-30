@@ -1,5 +1,5 @@
 const Gameboard = (() => {
-    let gameState = ['0', '1', '2', '3', '4', '5', '6', '7', '8']
+    let gameState = [0, 1, 2, 3, 4, 5, 6, 7, 8]
     const wonState = [  [0, 1, 2],
                         [0, 4, 8],
                         [0, 3, 6],
@@ -25,7 +25,7 @@ const Game = (() => {
     const playerOne = Player('FL3RA', 'X')
     const playerTwo = Player('Robot', 'O')
     let currentPlayer = playerOne
-    let lastPlayer
+    let lastPlayer = playerOne
     let finished = false
     const checkForWinner = (gamestate) => {
         gamestate = Gameboard.gameState
@@ -39,26 +39,9 @@ const Game = (() => {
             }
         }
     }
-    const getScore = (gamestate) => {
-        gamestate = Gameboard.gameState
-        let score = 0
-        let idList = []
-        function emptyIndexes(gamestate) {
-            gamestate = Gameboard.gameState
-            return gamestate.filter(element => element != 'X' && element !== 'O')
-        }
-        if (finished) {
-            score += 100
-            console.log('finished')
-        } else {
-            idList = emptyIndexes();
-        }
-        console.log(idList)
-        return score
-    }
     const playRound = (id, marker) => {
         marker = currentPlayer.marker
-        if (Gameboard.gameState[id] === '') {
+        if (typeof Gameboard.gameState[id] === 'number') {
             Gameboard.gameState[id] = marker
         } else {
             return
@@ -66,24 +49,20 @@ const Game = (() => {
         if (currentPlayer === playerOne) {
             lastPlayer = playerOne
             currentPlayer = playerTwo
+            console.log(currentPlayer.name)
         } else {
             lastPlayer = playerTwo
             currentPlayer = playerOne
-            minimax()
-            getScore()
+            console.log(Gameboard.gameState)
         }
-    }
-    const minimax = () => {
-        console.log('computer moved')
     }
     return {
         playerOne,
         playerTwo,
         currentPlayer,
+        lastPlayer,
         playRound,
         checkForWinner,
-        minimax,
-        getScore
     }
 })()
 const displayController = (() => {
@@ -92,7 +71,9 @@ const displayController = (() => {
         field.addEventListener('click', function() {
             let id = this.id
             Game.playRound(id)
-            field.textContent = Gameboard.gameState[field.id]
+            if (typeof Gameboard.gameState[id] !== 'number'){
+                field.textContent = Gameboard.gameState[id]
+            }
             Game.checkForWinner()
         })
     });
