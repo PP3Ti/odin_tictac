@@ -15,11 +15,10 @@ const Gameboard = (() => {
         wonState
     }
 })()
-const Player = (name, marker, maximizingplayer) => {
+const Player = (name, marker) => {
     return {
         name,
-        marker, 
-        maximizingplayer
+        marker
     }
 }
 const Game = (() => {
@@ -31,24 +30,24 @@ const Game = (() => {
     let winner
     let draw
     const checkForWinner = (gamestate) => {
-        gamestate = Gameboard.gameState
         let wonState = Gameboard.wonState
-        let emptySpots = AI.getEmptySpots()
+        let emptySpots = AI.getEmptySpots(gamestate)
         if (!Game.finished) {
             for (i = 0; i < wonState.length; i++) {
                 if (typeof gamestate[wonState[i][0]] !== 'number' && 
                     gamestate[wonState[i][0]] === gamestate[wonState[i][1]] &&
                     gamestate[wonState[i][0]] === gamestate[wonState[i][2]]) 
-                {
+                    {
                     Game.finished = true
                     Game.winner = Game.lastPlayer
                     console.log(Game.winner.name + ' won')
-                } else if (emptySpots.length === 0) {
-                    Game.finished = true
-                    Game.draw = true
-                    console.log('draw')
                 }
             } 
+            if (emptySpots.length === 0 && (Game.winner === undefined)) {
+                Game.finished = true
+                Game.draw = true
+                console.log('draw')
+            }
         } 
     }
     const playRound = (id, marker) => {
@@ -57,14 +56,12 @@ const Game = (() => {
             if (typeof Gameboard.gameState[id] === 'number') {
                 Gameboard.gameState[id] = marker
                 Game.lastPlayer = Game.playerOne
-                checkForWinner()
+                checkForWinner(Gameboard.gameState)
                 if (Game.finished) {
                     return
                 } else {
-                    AI.makeMove()
-                    Game.lastPlayer = Game.playerTwo
-                    console.log(lastPlayer)
-                    checkForWinner()
+                    AI.makeBestMove()
+                    checkForWinner(Gameboard.gameState)
                 }
             } else {
                 return
@@ -86,40 +83,93 @@ const Game = (() => {
     }
 })()
 const AI = (() => {
-    let score
-    function getEmptySpots() {
-        let emptySpots = Gameboard.gameState.filter(e => typeof e === 'number')
-        return emptySpots
+    let score 
+    let calls = 0
+    function getEmptySpots(gamestate) {
+        return gamestate.filter(e => typeof e === 'number')
     }
-    function evalBoard (gamestate) {
-        if (Game.finished && Game.draw) {
-            AI.score = 0
-        } else if (Game.finished && (Game.winner.maximizingplayer)) {
-            AI.score = 10
-        } else if (Game.finished && (!Game.winner.maximizingplayer)) {
-            AI.score = -10
+    function minimax(board, player) {
+        calls++
+        let emptySpots = getEmptySpots(board)
+
+        if (winning(board, Game.playerOne.marker)){
+            return {score:-10};
+        } else if (winning(board, Game.playerTwo.marker)) {
+           return {score:10};
+        } else if (emptySpots.length === 0){
+            return {score:0};
         }
-        if(Game.finished) {
-            console.log(AI.score)
+        let moves = []
+        for (let i = 0; i < emptySpots.length; i++) {
+            let move = {}
+            move.index = board[emptySpots[i]]
+            board[emptySpots[i]] = player.marker
+
+            if (player === Game.playerTwo) {
+                let result = minimax(board, Game.playerOne)
+                move.score = result.score
+            } else {
+                let result = minimax(board, Game.playerTwo)
+                move.score = result.score
+            }
+
+            board[emptySpots[i]] = move.index
+            moves.push(move)
         }
+        let bestMove 
+
+        if (player === Game.playerTwo) {
+            let bestScore = -100
+            for (let i = 0; i < moves.length; i++) {
+                if (moves[i].score > bestScore) {
+                    bestScore = moves[i].score;
+                    bestMove = i;
+            } 
+        }
+        } else {
+            let bestScore = 100
+            for (let i = 0; i < moves.length; i ++) {
+                if (moves[i].score < bestScore) {
+                    bestScore = moves[i].score
+                    bestMove = i
+                }
+            }
+        }
+        return moves[bestMove]
     }
-    function minimax (gamestate, depth, maximizingPlayer) {
-    }
-    function bestMove() {
+    function makeBestMove() {
+        let move = minimax(Gameboard.gameState, Game.playerTwo)
+        Gameboard.gameState[move.index] = Game.playerTwo.marker
+        Game.lastPlayer = Game.playerTwo
     }
     function makeMove() {
         Game.currentPlayer = Game.playerTwo
-        let fieldId = getEmptySpots()[0]
-        console.log(fieldId)
+        let randomField = Math.floor(Math.random() * getEmptySpots(Gameboard.gameState).length)
+        let fieldId = getEmptySpots(Gameboard.gameState)[randomField]
         Gameboard.gameState[fieldId] = Game.playerTwo.marker
-        console.log(Gameboard.gameState)
     }
+    function winning(board, player){
+        if (
+            (board[0] == player && board[1] == player && board[2] == player) ||
+            (board[3] == player && board[4] == player && board[5] == player) ||
+            (board[6] == player && board[7] == player && board[8] == player) ||
+            (board[0] == player && board[3] == player && board[6] == player) ||
+            (board[1] == player && board[4] == player && board[7] == player) ||
+            (board[2] == player && board[5] == player && board[8] == player) ||
+            (board[0] == player && board[4] == player && board[8] == player) ||
+            (board[2] == player && board[4] == player && board[6] == player)
+            ) {
+            return true;
+        } else {
+            return false;
+        }
+       }
     return {
         getEmptySpots,
         minimax,
-        bestMove,
         makeMove,
-        evalBoard
+        makeBestMove,
+        winning,
     }
 })()
 const displayController = (() => {
@@ -135,7 +185,6 @@ const displayController = (() => {
         field.addEventListener('click', function() {
             let id = this.id
             Game.playRound(id)
-            Game.checkForWinner()
             updateScreen()
         })
     });
