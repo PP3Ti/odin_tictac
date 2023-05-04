@@ -78,6 +78,7 @@ h1 {
     font-size: 3rem;
 }
 .gameContainer {
+    position: relative;
     grid-area: 3 / 2 / span 1 / span 1;
     display: grid;
     grid-template: repeat(3, 1fr) / repeat(3, 1fr);
@@ -97,4 +98,44 @@ h1 {
 }
 .gameContainer > div:hover {
     background-color: #3b3b3b;
+}
+.winnerField {
+    border: 2px solid #6e496e;
+}
+#draw {
+    position: absolute;
+    top: 25px;
+    height: 100px;
+    translate: -100px;
+    width: 800px;
+    background-color: rgba(114, 114, 114, 0.5);
+    color: black;
+    font-size: 5rem;
+    font-weight: bold;
+    transform: 0.2s;
+}
+.invisible {
+    visibility: hidden;
+}
+.visible {
+    visibility: visible;
+}
+#restart {    
+    background-color: #121212;
+    bottom: 50px;
+    translate: -50px;
+    position: absolute;
+    height: 40px;
+    width: 40px;
+}
+#restartButton {
+    height: 40px;
+    width: 40px;
+    border: none;
+    border-radius: 20px;
+    padding: 0;
+}
+#restartButton:hover {
+    transform: scale(1.1);
+    transform: 0.1s;
 }

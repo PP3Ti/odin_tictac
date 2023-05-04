@@ -29,6 +29,7 @@ const Game = (() => {
     let finished = false
     let winner
     let draw
+    let winnerFields
     const checkForWinner = (gamestate) => {
         let wonState = Gameboard.wonState
         let emptySpots = AI.getEmptySpots(gamestate)
@@ -40,7 +41,7 @@ const Game = (() => {
                     {
                     Game.finished = true
                     Game.winner = Game.lastPlayer
-                    console.log(Game.winner.name + ' won')
+                    Game.winnerFields = wonState[i]
                 }
             } 
             if (emptySpots.length === 0 && (Game.winner === undefined)) {
@@ -78,6 +79,7 @@ const Game = (() => {
         winner,
         finished,
         draw,
+        winnerFields,
         playRound,
         checkForWinner,
     }
@@ -173,11 +175,29 @@ const AI = (() => {
     }
 })()
 const displayController = (() => {
+    const restartButton = document.getElementById('restartButton')
     const fields = document.querySelectorAll('.field')
+    const draw = document.getElementById('draw')
+    restartButton.addEventListener('click', function() {
+        window.location.reload()
+    })
     function updateScreen() {
         for (i = 0; i < Gameboard.gameState.length; i++) {
             if (typeof Gameboard.gameState[i] !== 'number') {
                 fields[i].textContent = Gameboard.gameState[i]
+            }
+        }
+        if (Game.draw) {
+            draw.classList.remove('invisible')
+            draw.classList.add('visible')
+        }
+        if (Game.finished && (!Game.draw)) {
+            for (j = 0; j < Game.winnerFields.length; j++) {
+                for (k = 0; k < fields.length; k++) {
+                    if (Game.winnerFields[j] == fields[k].id) {
+                        fields[k].classList.add('winnerField')
+                    }
+                }
             }
         }
     }
